@@ -164,6 +164,11 @@ type QueryContext struct {
 	// Constraints is a map from column name to the details of the
 	// constraints on that column.
 	Constraints map[string]ConstraintList
+	// ColsUsed is a list of the columns which are being used
+	ColsUsed []string
+	// ColsUsedBitset is a bitmask representing the columns which are being used
+	ColsUsedBitset int
+
 }
 
 // ConstraintList contains the details of the constraints for the given column.
@@ -200,6 +205,8 @@ const (
 // JSON and are not made public.
 type queryContextJSON struct {
 	Constraints []constraintListJSON `json:"constraints"`
+	ColsUsed []string `json:"colsUsed"`
+	ColsUsedBitset int `json:"colsUsedBitset"`
 }
 
 type constraintListJSON struct {
@@ -216,7 +223,7 @@ func parseQueryContext(ctxJSON string) (*QueryContext, error) {
 		return nil, errors.Wrap(err, "unmarshaling context JSON")
 	}
 
-	ctx := QueryContext{map[string]ConstraintList{}}
+	ctx := QueryContext{map[string]ConstraintList{}, parsed.ColsUsed, parsed.ColsUsedBitset}
 	for _, cList := range parsed.Constraints {
 		constraints, err := parseConstraintList(cList.List)
 		if err != nil {
