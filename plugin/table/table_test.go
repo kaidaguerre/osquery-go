@@ -57,7 +57,7 @@ func TestTablePlugin(t *testing.T) {
 
 	// Call with good action and context
 	resp = plugin.Call(context.Background(), osquery.ExtensionPluginRequest{"action": "generate", "context": "{}"})
-	assert.Equal(t, QueryContext{map[string]ConstraintList{}}, calledQueryCtx)
+	assert.Equal(t, QueryContext{map[string]ConstraintList{}, nil}, calledQueryCtx)
 	assert.Equal(t, &StatusOK, resp.Status)
 	assert.Equal(t, osquery.ExtensionPluginResponse{
 		{
@@ -187,14 +187,15 @@ func TestParseQueryContext(t *testing.T) {
       ],
       "affinity":"TEXT"
     }
-  ]
+  ],
+	"colsUsed":["big_int"]
 }`,
 			context: QueryContext{map[string]ConstraintList{
 				"big_int": ConstraintList{ColumnTypeBigInt, []Constraint{}},
 				"double":  ConstraintList{ColumnTypeDouble, []Constraint{}},
 				"integer": ConstraintList{ColumnTypeInteger, []Constraint{}},
 				"text":    ConstraintList{ColumnTypeText, []Constraint{{OperatorEquals, "foo"}}},
-			}},
+			}, []string{"big_int"}},
 		},
 		{
 			json: `
@@ -230,7 +231,8 @@ func TestParseQueryContext(t *testing.T) {
       ],
       "affinity":"TEXT"
     }
-  ]
+  ],
+	"colsUsed":["big_int"]
 }
 `,
 			context: QueryContext{map[string]ConstraintList{
@@ -238,7 +240,7 @@ func TestParseQueryContext(t *testing.T) {
 				"double":  ConstraintList{ColumnTypeDouble, []Constraint{{OperatorGreaterThanOrEquals, "3.1"}}},
 				"integer": ConstraintList{ColumnTypeInteger, []Constraint{}},
 				"text":    ConstraintList{ColumnTypeText, []Constraint{{OperatorEquals, "foobar"}}},
-			}},
+			}, []string{"big_int"}},
 		},
 	}
 	for _, tt := range testCases {
